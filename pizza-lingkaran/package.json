@@ -1,0 +1,10 @@
+{
+  "name": "pizza-lingkaran",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Aplikasi belajar Keliling dan Luas Lingkaran untuk siswa SMP kelas 8 (Mathematical Literacy)",
+  "scripts": {
+    "start": "npx --yes serve . -l 3000",
+    "dev": "npx --yes serve . -l 3000"
+  }
+}
