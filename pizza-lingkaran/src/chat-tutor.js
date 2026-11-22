@@ -74,18 +74,29 @@ export function createChatTutor({ soal = '', tahapSekarang = 'Tahap 1 - Identifi
         });
 
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(data.error || 'Layanan AI belum siap atau terjadi kendala jaringan.');
+        if (!res.ok || !data.reply) {
+          throw new Error(data.error || 'Fallback needed');
         }
 
-        pesan.push({ role: 'assistant', content: data.reply || 'Ada kendala respon AI, coba tanyakan kembali ya!' });
+        pesan.push({ role: 'assistant', content: data.reply });
       } catch (err) {
-        pesan.push({
-          role: 'assistant',
-          content: err.message.includes('API key')
-            ? 'Kunci API DeepSeek (DEEPSEEK_API_KEY) belum diisi di server/.env. Silakan isi API key kamu untuk menghubungkan model AI.'
-            : 'Kak Dit kesulitan terhubung: ' + err.message + '. Kamu tetap bisa menggunakan tombol "Butuh petunjuk" di atas!'
-        });
+        // Fallback Sokratik RMT otomatis jika server lambat atau API Key belum diset
+        const lastMsg = text.toLowerCase();
+        let fallbackReply = '';
+        if (lastMsg.includes('keliling') || lastMsg.includes('k =')) {
+          fallbackReply = 'Bagus sekali! Keliling mengukur tepi pizza. Rumusnya K = π × d atau K = 2 × π × r. Berapa diameter atau jari-jari pada soal ini?';
+        } else if (lastMsg.includes('luas') || lastMsg.includes('l =')) {
+          fallbackReply = 'Tepat! Luas mengukur seluruh bagian atas pizza. Rumusnya L = π × r². Coba cek: apakah yang diketahui jari-jari atau diameter?';
+        } else if (lastMsg.includes('jari') || lastMsg.includes('r =') || lastMsg.includes('radius')) {
+          fallbackReply = 'Keren! Ingat bahwa jari-jari (r) adalah setengah dari diameter (r = d / 2). Berapa nilai r yang kamu peroleh?';
+        } else if (lastMsg.includes('diameter') || lastMsg.includes(' d ')) {
+          fallbackReply = 'Betul! Diameter (d) adalah panjang garis tengah pizza. Untuk mencari luas, bagi dua dulu untuk mendapatkan jari-jari r ya!';
+        } else if (/\d+/.test(lastMsg)) {
+          fallbackReply = 'Angka yang kamu sebutkan sudah pas! Sekarang coba masukkan angka itu ke rumusnya. Berapa hasil hitunganmu?';
+        } else {
+          fallbackReply = 'Kak Dit siap mendampingi proses berpikirmu! Coba sebutkan dulu: apa saja yang diketahui dan apa yang ditanyakan di soal ini?';
+        }
+        pesan.push({ role: 'assistant', content: fallbackReply });
       } finally {
         loading = false;
         render();

@@ -5,7 +5,7 @@ import { saveResult } from './store.js';
 import * as audio from './audio.js';
 import { confetti } from './confetti.js';
 import { mascot, speech } from './mascot.js';
-import { createChatTutor } from './chat-tutor.js';
+import { createChatTutor } from './chat-tutor.js?v=7';
 
 export function latihan(container, ctx) {
   let i = 0;

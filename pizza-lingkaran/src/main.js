@@ -1,14 +1,14 @@
 // Titik masuk: router berbasis hash, halaman login (nama siswa), dan beranda.
 import { getSession, login, logout, isDemo, getResults, best } from './store.js';
 import { esc } from './util.js';
-import { belajar } from './belajar.js?v=6';
-import { mainPizza } from './main-pizza.js?v=6';
-import { latihan } from './latihan.js?v=6';
-import { tes } from './tes.js?v=6';
+import { belajar } from './belajar.js?v=7';
+import { mainPizza } from './main-pizza.js?v=7';
+import { latihan } from './latihan.js?v=7';
+import { tes } from './tes.js?v=7';
 import { TES_AKTIF } from './config.js';
 import * as audio from './audio.js';
 import { mascot } from './mascot.js';
-import { createChatTutor } from './chat-tutor.js';
+import { createChatTutor } from './chat-tutor.js?v=7';
 
 const app = document.getElementById('app');
 
