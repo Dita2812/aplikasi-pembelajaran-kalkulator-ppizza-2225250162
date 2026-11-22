@@ -1,10 +1,10 @@
 // Titik masuk: router berbasis hash, halaman login (nama siswa), dan beranda.
 import { getSession, login, logout, isDemo, getResults, best } from './store.js';
 import { esc } from './util.js';
-import { belajar } from './belajar.js';
-import { mainPizza } from './main-pizza.js?v=3';
-import { latihan } from './latihan.js?v=3';
-import { tes } from './tes.js?v=3';
+import { belajar } from './belajar.js?v=5';
+import { mainPizza } from './main-pizza.js?v=5';
+import { latihan } from './latihan.js?v=5';
+import { tes } from './tes.js?v=5';
 import { TES_AKTIF } from './config.js';
 import * as audio from './audio.js';
 import { mascot } from './mascot.js';
@@ -182,6 +182,10 @@ function beranda(el, ctx) {
           <p>${pepTalk}</p>
         </div>
       </div>
+      <div class="kakdit-message kakdit-appreciation">
+        <span class="kakdit-mark" aria-hidden="true">💡</span>
+        <p><strong>Asisten Belajar AI (Tutor RMT):</strong> Kak Dit kini hadir mendampingi proses berpikirmu di menu <strong>Latihan Soal</strong>!</p>
+      </div>
       <div class="levelcard">
         <div class="lv-top"><strong id="lvname">Pemula</strong><span id="lvstars">0 dari ${MAX_STARS} bintang</span></div>
         <div class="bar" role="img" aria-label="Kemajuan bintang"><span id="lvbar" style="width:0%"></span></div>
@@ -216,7 +220,7 @@ function beranda(el, ctx) {
         </a>
         <a class="menu-card" href="#latihan" style="--c:var(--ok)">
           ${TILE('--ok', 'pencil')}
-          <span class="mc-body"><h2>Latihan soal</h2><p>8 soal cerita dengan petunjuk dan pembahasan.</p><span class="prog" id="p-latihan">Belum dikerjakan</span></span>
+          <span class="mc-body"><h2>Latihan soal 💡</h2><p>8 soal cerita + Asisten Belajar AI (Tutor RMT).</p><span class="prog" id="p-latihan">Belum dikerjakan</span></span>
         </a>
         ${
           TES_AKTIF
