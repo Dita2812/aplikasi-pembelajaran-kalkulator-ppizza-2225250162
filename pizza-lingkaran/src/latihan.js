@@ -5,6 +5,7 @@ import { saveResult } from './store.js';
 import * as audio from './audio.js';
 import { confetti } from './confetti.js';
 import { mascot, speech } from './mascot.js';
+import { createChatTutor } from './chat-tutor.js';
 
 export function latihan(container, ctx) {
   let i = 0;
@@ -58,12 +59,42 @@ export function latihan(container, ctx) {
                <button type="button" class="btn" id="cek">Cek jawaban</button>`
         }
         <div id="hints" class="hints" aria-live="polite"></div>
-        <button type="button" class="btn ghost" id="hint">Butuh petunjuk</button>
+        <div class="action-buttons-row">
+          <button type="button" class="btn ghost" id="hint">Butuh petunjuk</button>
+          <button type="button" class="btn ghost tutor-btn" id="tutor-btn">
+            <span aria-hidden="true">💡</span> Tanya Kak Dit (Tutor RMT)
+          </button>
+        </div>
+        <div id="tutor-slot"></div>
         <div id="fb" aria-live="polite"></div>
       </section>`;
 
     const fb = container.querySelector('#fb');
     const hintBtn = container.querySelector('#hint');
+    const tutorBtn = container.querySelector('#tutor-btn');
+    const tutorSlot = container.querySelector('#tutor-slot');
+    let tutorOpen = false;
+
+    tutorBtn.addEventListener('click', () => {
+      tutorOpen = !tutorOpen;
+      tutorBtn.classList.toggle('active', tutorOpen);
+      if (tutorOpen) {
+        tutorSlot.innerHTML = '';
+        const tutor = createChatTutor({
+          soal: s.teks,
+          tahapSekarang: 'Tahap 1 - Pengembangan Kognitif (Identifikasi Informasi)',
+          kesulitan: s.indikator,
+          onClose: () => {
+            tutorOpen = false;
+            tutorBtn.classList.remove('active');
+            tutorSlot.innerHTML = '';
+          }
+        });
+        tutorSlot.appendChild(tutor);
+      } else {
+        tutorSlot.innerHTML = '';
+      }
+    });
 
     hintBtn.addEventListener('click', () => {
       if (done || hintShown >= s.hint.length) return;
@@ -81,6 +112,7 @@ export function latihan(container, ctx) {
       if (ok) confetti();
       hasil.push({ indikator: s.indikator, benar: ok, petunjuk: hintShown });
       hintBtn.disabled = true;
+      tutorBtn.disabled = true;
       container.querySelectorAll('.opt, #ans, #cek').forEach((x) => (x.disabled = true));
       fb.innerHTML = `
         <div class="verdict ${ok ? '' : 'bad'}">
