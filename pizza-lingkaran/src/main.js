@@ -1,13 +1,14 @@
 // Titik masuk: router berbasis hash, halaman login (nama siswa), dan beranda.
 import { getSession, login, logout, isDemo, getResults, best } from './store.js';
 import { esc } from './util.js';
-import { belajar } from './belajar.js?v=5';
-import { mainPizza } from './main-pizza.js?v=5';
-import { latihan } from './latihan.js?v=5';
-import { tes } from './tes.js?v=5';
+import { belajar } from './belajar.js?v=6';
+import { mainPizza } from './main-pizza.js?v=6';
+import { latihan } from './latihan.js?v=6';
+import { tes } from './tes.js?v=6';
 import { TES_AKTIF } from './config.js';
 import * as audio from './audio.js';
 import { mascot } from './mascot.js';
+import { createChatTutor } from './chat-tutor.js';
 
 const app = document.getElementById('app');
 
@@ -182,10 +183,17 @@ function beranda(el, ctx) {
           <p>${pepTalk}</p>
         </div>
       </div>
-      <div class="kakdit-message kakdit-appreciation">
-        <span class="kakdit-mark" aria-hidden="true">💡</span>
-        <p><strong>Asisten Belajar AI (Tutor RMT):</strong> Kak Dit kini hadir mendampingi proses berpikirmu di menu <strong>Latihan Soal</strong>!</p>
+      <div class="kakdit-message kakdit-appreciation" id="open-tutor-beranda" role="button" tabindex="0" style="cursor: pointer; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span class="kakdit-mark" aria-hidden="true">💡</span>
+          <div>
+            <p><strong>Tanya Asisten AI (Tutor RMT Kak Dit)</strong></p>
+            <p class="small muted">Klik untuk tanya rumus, konsep lingkaran, dan bimbingan soal pizza sepuasnya!</p>
+          </div>
+        </div>
+        <button type="button" class="btn" style="min-height: 40px; padding: 6px 16px; font-size: 0.9rem; align-self: flex-start; cursor: pointer;">✨ Buka Chat Tutor AI</button>
       </div>
+      <div id="beranda-tutor-slot"></div>
       <div class="levelcard">
         <div class="lv-top"><strong id="lvname">Pemula</strong><span id="lvstars">0 dari ${MAX_STARS} bintang</span></div>
         <div class="bar" role="img" aria-label="Kemajuan bintang"><span id="lvbar" style="width:0%"></span></div>
@@ -232,6 +240,31 @@ function beranda(el, ctx) {
         }
       </div>
     </section>`;
+
+  const openBtn = el.querySelector('#open-tutor-beranda');
+  const slot = el.querySelector('#beranda-tutor-slot');
+  let isTutorOpen = false;
+  openBtn?.addEventListener('click', (e) => {
+    // Hindari double click jika klik di dalam tombol
+    isTutorOpen = !isTutorOpen;
+    if (isTutorOpen) {
+      slot.innerHTML = '';
+      const tutor = createChatTutor({
+        soal: 'Konsultasi Umum - Konsep Keliling dan Luas Lingkaran Pizza',
+        tahapSekarang: 'Tahap 1 - Pengembangan Kognitif',
+        kesulitan: 'Umum',
+        onClose: () => {
+          isTutorOpen = false;
+          slot.innerHTML = '';
+        }
+      });
+      slot.appendChild(tutor);
+      slot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      slot.innerHTML = '';
+    }
+  });
+
   getResults(ctx.user.code).then((res) => {
     if (!alive) return;
     const m = best(res, 'materi');
