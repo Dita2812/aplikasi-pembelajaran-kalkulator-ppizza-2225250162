@@ -96,11 +96,21 @@
     </div>
 
     <div class="controls">
+      <label style="display:flex;align-items:center;gap:6px;background:#1e293b;padding:8px 14px;border-radius:10px;border:1px solid #334155;cursor:pointer;font-size:0.9rem;">
+        <input type="checkbox" id="chkMic" /> 🎤 Pakai Suara Saya (Mikrofon)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;background:#1e293b;padding:8px 14px;border-radius:10px;border:1px solid #334155;cursor:pointer;font-size:0.9rem;">
+        <input type="checkbox" id="chkCam" /> 📷 Tampilkan Muka Saya (Webcam)
+      </label>
+    </div>
+
+    <div class="controls">
       <button class="btn-play" id="btnPlay">▶ Putar Preview Video</button>
       <button class="btn-rec" id="btnRec">⏺ Putar & Rekam Otomatis (Download Video)</button>
       <button class="btn-stop" id="btnStop" disabled>⏹ Berhenti</button>
       <a class="btn-dl" id="btnDl" download="Video-Pembelajaran-Pizza-Lingkaran-Dita.webm">⬇ Download Video</a>
     </div>
+    <video id="camPreview" autoplay muted playsinline style="display:none;"></video>
 
     <div class="status-bar" id="status">Siap diputar. Klik "Putar & Rekam Otomatis" untuk menghasilkan file video!</div>
 
@@ -119,6 +129,10 @@
       const btnStop = document.getElementById('btnStop');
       const btnDl = document.getElementById('btnDl');
       const statusEl = document.getElementById('status');
+      const chkMic = document.getElementById('chkMic');
+      const chkCam = document.getElementById('chkCam');
+      const camPreview = document.getElementById('camPreview');
+      let userMediaStream = null;
 
       const SCENES = [
         {
@@ -191,7 +205,7 @@
       let recordedChunks = [];
 
       function speak(text) {
-        if (!('speechSynthesis' in window)) return;
+        if (chkMic.checked || !('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'id-ID';
@@ -423,10 +437,52 @@
         ctx.globalAlpha = 1;
         drawSubtitle(scene.narration);
 
+        // Draw circular webcam PiP if enabled
+        if (chkCam.checked && camPreview.readyState >= 2) {
+          const camR = 78;
+          const camX = 1165;
+          const camY = 120;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(camX, camY, camR, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          const aspect = camPreview.videoWidth / (camPreview.videoHeight || 1);
+          const drawW = aspect > 1 ? camR * 2 * aspect : camR * 2;
+          const drawH = aspect > 1 ? camR * 2 : (camR * 2) / aspect;
+          ctx.drawImage(camPreview, camX - drawW / 2, camY - drawH / 2, drawW, drawH);
+          ctx.restore();
+
+          ctx.beginPath();
+          ctx.arc(camX, camY, camR, 0, Math.PI * 2);
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = '#facc15';
+          ctx.stroke();
+        }
+
         animId = requestAnimationFrame(renderFrame);
       }
 
-      function startShow(record = false) {
+      async function startShow(record = false) {
+        const useMic = chkMic.checked;
+        const useCam = chkCam.checked;
+
+        if (useMic || useCam) {
+          try {
+            userMediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: useMic,
+              video: useCam ? { width: 640, height: 480 } : false
+            });
+            if (useCam) {
+              camPreview.srcObject = userMediaStream;
+              await camPreview.play();
+            }
+          } catch (err) {
+            alert('Izin mikrofon/kamera ditolak atau tidak tersedia: ' + err.message);
+            return;
+          }
+        }
+
         running = true;
         currentSceneIdx = -1;
         startTime = performance.now();
@@ -437,8 +493,13 @@
 
         if (record) {
           recordedChunks = [];
-          const stream = canvas.captureStream(30);
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+          const canvasStream = canvas.captureStream(30);
+          const tracks = [...canvasStream.getVideoTracks()];
+          if (userMediaStream && useMic) {
+            tracks.push(...userMediaStream.getAudioTracks());
+          }
+          const combinedStream = new MediaStream(tracks);
+          mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
           mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) recordedChunks.push(e.data);
           };
@@ -459,6 +520,10 @@
         running = false;
         cancelAnimationFrame(animId);
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (userMediaStream) {
+          userMediaStream.getTracks().forEach(t => t.stop());
+          userMediaStream = null;
+        }
         btnPlay.disabled = false;
         btnRec.disabled = false;
         btnStop.disabled = true;
