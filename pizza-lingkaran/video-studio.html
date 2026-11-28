@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Studio Video Pembelajaran AI - Pizza Lingkaran</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      header {
+        text-align: center;
+        max-width: 900px;
+        margin-bottom: 16px;
+      }
+      h1 { margin: 0 0 6px; font-size: 1.5rem; color: #facc15; }
+      p { margin: 0; color: #94a3b8; font-size: 0.95rem; }
+      .stage-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 960px;
+        aspect-ratio: 16 / 9;
+        background: #1e293b;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        border: 2px solid #334155;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+        justify-content: center;
+        align-items: center;
+      }
+      button {
+        padding: 12px 22px;
+        border-radius: 12px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.1s, opacity 0.2s;
+      }
+      button:active { transform: scale(0.97); }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-play { background: #2563eb; color: #fff; }
+      .btn-rec { background: #dc2626; color: #fff; }
+      .btn-stop { background: #475569; color: #fff; }
+      .btn-dl { background: #16a34a; color: #fff; text-decoration: none; padding: 12px 22px; border-radius: 12px; font-weight: 700; display: none; }
+      .status-bar {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #38bdf8;
+        font-weight: 600;
+      }
+      .note {
+        margin-top: 16px;
+        max-width: 900px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 0.88rem;
+        color: #cbd5e1;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🎬 Studio Video Pembelajaran Otomatis — Pizza Lingkaran</h1>
+      <p>100% Gratis, Tanpa Watermark, Langsung Download Video Animasi!</p>
+    </header>
+
+    <div class="stage-wrap">
+      <canvas id="stage" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="controls">
+      <button class="btn-play" id="btnPlay">▶ Putar Preview Video</button>
+      <button class="btn-rec" id="btnRec">⏺ Putar & Rekam Otomatis (Download Video)</button>
+      <button class="btn-stop" id="btnStop" disabled>⏹ Berhenti</button>
+      <a class="btn-dl" id="btnDl" download="Video-Pembelajaran-Pizza-Lingkaran-Dita.webm">⬇ Download Video</a>
+    </div>
+
+    <div class="status-bar" id="status">Siap diputar. Klik "Putar & Rekam Otomatis" untuk menghasilkan file video!</div>
+
+    <div class="note">
+      <strong>💡 Cara Pakai:</strong><br>
+      1. Klik tombol merah <strong>"Putar & Rekam Otomatis"</strong>.<br>
+      2. Biarkan video animasi berjalan dari Scene 1 sampai Scene 6 (sekitar 45 detik) sambil narasi suara AI Bahasa Indonesia membacakan materinya.<br>
+      3. Setelah selesai, tombol hijau <strong>"Download Video"</strong> akan muncul (atau otomatis terunduh). File video siap dikirim ke Pak Aan atau diunggah ke Google Drive / YouTube!
+    </div>
+
+    <script>
+      const canvas = document.getElementById('stage');
+      const ctx = canvas.getContext('2d');
+      const btnPlay = document.getElementById('btnPlay');
+      const btnRec = document.getElementById('btnRec');
+      const btnStop = document.getElementById('btnStop');
+      const btnDl = document.getElementById('btnDl');
+      const statusEl = document.getElementById('status');
+
+      const SCENES = [
+        {
+          id: 1,
+          duration: 7500,
+          title: 'Pizza Lingkaran',
+          subtitle: 'Belajar Keliling & Luas Lingkaran untuk SMP Kelas 8',
+          author: 'Oleh: Dita Amalia Veronica (NIM 2225250162)',
+          lecturer: 'Dosen Pengampu: Dr. Aan Hendrayana',
+          narration: 'Halo semuanya! Saya Dita Amalia Veronica. Hari ini kita akan belajar keliling dan luas lingkaran menggunakan aplikasi interaktif Pizza Lingkaran!'
+        },
+        {
+          id: 2,
+          duration: 8500,
+          title: 'Kenapa Sering Tertukar?',
+          subtitle: 'Analogi Pinggiran vs Permukaan Pizza',
+          textA: 'Keliling = Pinggiran / Crust Pizza (K = π × d)',
+          textB: 'Luas = Seluruh Permukaan Keju & Topping (L = π × r²)',
+          narration: 'Banyak siswa sering tertukar antara keliling dan luas. Bayangkan pizza! Pinggiran roti di tepi adalah keliling, sedangkan seluruh permukaan keju di atasnya adalah luas.'
+        },
+        {
+          id: 3,
+          duration: 8000,
+          title: 'Rumus Penting Lingkaran',
+          subtitle: 'Hubungan Jari-jari (r) dan Diameter (d)',
+          formula1: 'd = 2 × r    |    r = d ÷ 2',
+          formula2: 'Keliling (K) = π × d  atau  2 × π × r',
+          formula3: 'Luas (L) = π × r²   (π = 22/7 atau 3,14)',
+          narration: 'Ingat baik-baik! Diameter adalah dua kali jari-jari. Untuk menghitung keliling gunakan pi dikali diameter, dan untuk luas gunakan pi dikali r kuadrat.'
+        },
+        {
+          id: 4,
+          duration: 8000,
+          title: 'Fitur Aplikasi Pizza Lingkaran',
+          subtitle: 'Mengelola Cognitive Load & Mathematical Literacy',
+          features: [
+            '1. Materi Belajar Bertahap (5 Langkah Pendek)',
+            '2. Kalkulator Pizza 3D & Tantangan Pizza Hemat',
+            '3. Latihan Soal Cerita + Tes Literasi Matematika'
+          ],
+          narration: 'Aplikasi ini dirancang dengan mengelola beban kognitif siswa melalui materi bertahap, simulasi tiga dimensi, dan tantangan memilih pizza paling hemat.'
+        },
+        {
+          id: 5,
+          duration: 9500,
+          title: 'Inovasi AI: Tutor RMT (Kak Dit)',
+          subtitle: 'Integrasi DeepSeek AI + Rogorius Mathematical Thinking',
+          steps: [
+            'Tahap 1: Pengembangan Kognitif (Identifikasi r & d)',
+            'Tahap 2: Konten sebagai Proses (Pilih Rumus yang Tepat)',
+            'Tahap 3: Konstruksi Konseptual (Verifikasi Hitungan Mandiri)'
+          ],
+          narration: 'Keunggulan utamanya adalah Asisten Belajar AI Kak Dit berbasis DeepSeek. AI tidak langsung memberi kunci jawaban, melainkan membimbing lewat tiga tahap RMT.'
+        },
+        {
+          id: 6,
+          duration: 6000,
+          title: 'Terima Kasih!',
+          subtitle: 'Belajar Matematika Jadi Seru, Bermakna, dan Penuh Nalar',
+          url: 'aplikasi-pizza-lingkaran-2225250162.netlify.app',
+          narration: 'Terima kasih banyak kepada Bapak Dr. Aan Hendrayana dan teman-teman semua. Selamat belajar bersama Pizza Lingkaran!'
+        }
+      ];
+
+      let running = false;
+      let startTime = 0;
+      let currentSceneIdx = -1;
+      let animId = null;
+      let mediaRecorder = null;
+      let recordedChunks = [];
+
+      function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'id-ID';
+        utter.rate = 1.02;
+        utter.pitch = 1.05;
+        const voices = window.speechSynthesis.getVoices();
+        const idVoice = voices.find(v => v.lang.startsWith('id'));
+        if (idVoice) utter.voice = idVoice;
+        window.speechSynthesis.speak(utter);
+      }
+
+      function drawPizza(cx, cy, r, angle, highlight = 'none') {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+
+        // Crust
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = highlight === 'keliling' ? '#ef4444' : '#d97706';
+        ctx.fill();
+        if (highlight === 'keliling') {
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = '#fde047';
+          ctx.stroke();
+        }
+
+        // Cheese
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = highlight === 'luas' ? '#fde047' : '#fbbf24';
+        ctx.fill();
+
+        // Pepperoni
+        const peps = [[-0.4, -0.3], [0.35, -0.35], [-0.25, 0.4], [0.4, 0.25], [0, 0]];
+        peps.forEach(([px, py]) => {
+          ctx.beginPath();
+          ctx.arc(px * r, py * r, r * 0.11, 0, Math.PI * 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fill();
+        });
+
+        // Slice lines
+        ctx.strokeStyle = 'rgba(180, 83, 9, 0.4)';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          const a = (i * Math.PI) / 4;
+          ctx.moveTo(Math.cos(a) * -r * 0.85, Math.sin(a) * -r * 0.85);
+          ctx.lineTo(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawBackground(t) {
+        const grad = ctx.createLinearGradient(0, 0, 1280, 720);
+        grad.addColorStop(0, '#0f172a');
+        grad.addColorStop(1, '#1e3a8a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1280, 720);
+
+        // Subtle grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < 1280; x += 64) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 720); ctx.stroke();
+        }
+        for (let y = 0; y < 720; y += 64) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1280, y); ctx.stroke();
+        }
+      }
+
+      function drawRoundedBox(x, y, w, h, r, fill, stroke = null) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = stroke;
+          ctx.stroke();
+        }
+      }
+
+      function drawSubtitle(text) {
+        drawRoundedBox(100, 620, 1080, 74, 16, 'rgba(15, 23, 42, 0.85)', 'rgba(255,255,255,0.15)');
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '600 22px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, 640, 664, 1020);
+      }
+
+      function renderFrame(now) {
+        if (!running) return;
+        const elapsed = now - startTime;
+
+        // Find current scene
+        let acc = 0;
+        let idx = 0;
+        let sceneTime = 0;
+        for (let i = 0; i < SCENES.length; i++) {
+          if (elapsed < acc + SCENES[i].duration) {
+            idx = i;
+            sceneTime = elapsed - acc;
+            break;
+          }
+          acc += SCENES[i].duration;
+          if (i === SCENES.length - 1) {
+            stopShow(true);
+            return;
+          }
+        }
+
+        const scene = SCENES[idx];
+        if (idx !== currentSceneIdx) {
+          currentSceneIdx = idx;
+          statusEl.textContent = `Memutar Scene ${idx + 1}/${SCENES.length}: ${scene.title}`;
+          speak(scene.narration);
+        }
+
+        drawBackground(elapsed);
+        const p = Math.min(1, sceneTime / 800);
+        ctx.globalAlpha = p;
+
+        if (scene.id === 1) {
+          drawPizza(960, 320, 170, elapsed * 0.0006);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#facc15';
+          ctx.font = '800 64px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 90, 230);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '600 30px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 90, 290);
+          drawRoundedBox(90, 350, 640, 130, 18, 'rgba(255,255,255,0.08)', '#3b82f6');
+          ctx.fillStyle = '#93c5fd';
+          ctx.font = '700 26px "Segoe UI", sans-serif';
+          ctx.fillText(scene.author, 120, 405);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '600 22px "Segoe UI", sans-serif';
+          ctx.fillText(scene.lecturer, 120, 448);
+        }
+        else if (scene.id === 2) {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#facc15';
+          ctx.font = '800 48px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 640, 110);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '600 26px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 640, 155);
+
+          drawPizza(350, 360, 120, elapsed * 0.0005, 'keliling');
+          drawRoundedBox(130, 510, 440, 75, 14, 'rgba(239, 68, 68, 0.2)', '#ef4444');
+          ctx.fillStyle = '#fecaca';
+          ctx.font = '700 20px "Segoe UI", sans-serif';
+          ctx.fillText(scene.textA, 350, 555);
+
+          drawPizza(930, 360, 120, -elapsed * 0.0005, 'luas');
+          drawRoundedBox(680, 510, 500, 75, 14, 'rgba(250, 204, 21, 0.2)', '#facc15');
+          ctx.fillStyle = '#fef08a';
+          ctx.font = '700 20px "Segoe UI", sans-serif';
+          ctx.fillText(scene.textB, 930, 555);
+        }
+        else if (scene.id === 3) {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#facc15';
+          ctx.font = '800 48px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 640, 110);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '600 26px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 640, 155);
+
+          [scene.formula1, scene.formula2, scene.formula3].forEach((f, k) => {
+            drawRoundedBox(240, 210 + k * 125, 800, 95, 18, 'rgba(255,255,255,0.1)', '#60a5fa');
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 32px "Segoe UI", sans-serif';
+            ctx.fillText(f, 640, 268 + k * 125);
+          });
+        }
+        else if (scene.id === 4) {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#facc15';
+          ctx.font = '800 46px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 640, 110);
+          ctx.fillStyle = '#93c5fd';
+          ctx.font = '600 26px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 640, 155);
+
+          scene.features.forEach((f, k) => {
+            drawRoundedBox(180, 210 + k * 125, 920, 95, 18, 'rgba(30, 41, 59, 0.9)', '#38bdf8');
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '700 28px "Segoe UI", sans-serif';
+            ctx.fillText(f, 220, 268 + k * 125);
+          });
+        }
+        else if (scene.id === 5) {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#4ade80';
+          ctx.font = '800 46px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 640, 105);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '600 24px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 640, 148);
+
+          scene.steps.forEach((s, k) => {
+            drawRoundedBox(150, 200 + k * 125, 980, 95, 18, 'rgba(22, 163, 74, 0.18)', '#4ade80');
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 26px "Segoe UI", sans-serif';
+            ctx.fillText('💡 ' + s, 190, 258 + k * 125);
+          });
+        }
+        else if (scene.id === 6) {
+          drawPizza(640, 250, 100, elapsed * 0.001);
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#facc15';
+          ctx.font = '800 58px "Segoe UI", sans-serif';
+          ctx.fillText(scene.title, 640, 430);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '600 28px "Segoe UI", sans-serif';
+          ctx.fillText(scene.subtitle, 640, 485);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '700 24px "Segoe UI", sans-serif';
+          ctx.fillText('🌐 ' + scene.url, 640, 545);
+        }
+
+        ctx.globalAlpha = 1;
+        drawSubtitle(scene.narration);
+
+        animId = requestAnimationFrame(renderFrame);
+      }
+
+      function startShow(record = false) {
+        running = true;
+        currentSceneIdx = -1;
+        startTime = performance.now();
+        btnPlay.disabled = true;
+        btnRec.disabled = true;
+        btnStop.disabled = false;
+        btnDl.style.display = 'none';
+
+        if (record) {
+          recordedChunks = [];
+          const stream = canvas.captureStream(30);
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+          };
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            btnDl.href = url;
+            btnDl.style.display = 'inline-flex';
+            statusEl.textContent = '✅ Selesai! Klik tombol hijau "Download Video" di atas!';
+          };
+          mediaRecorder.start();
+        }
+
+        animId = requestAnimationFrame(renderFrame);
+      }
+
+      function stopShow(finished = false) {
+        running = false;
+        cancelAnimationFrame(animId);
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        btnPlay.disabled = false;
+        btnRec.disabled = false;
+        btnStop.disabled = true;
+
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        } else if (finished) {
+          statusEl.textContent = '✅ Preview video selesai diputar!';
+        } else {
+          statusEl.textContent = 'Video dihentikan.';
+        }
+      }
+
+      btnPlay.addEventListener('click', () => startShow(false));
+      btnRec.addEventListener('click', () => startShow(true));
+      btnStop.addEventListener('click', () => stopShow(false));
+
+      // Draw initial frame
+      drawBackground(0);
+      drawPizza(950, 320, 160, 0);
+      ctx.fillStyle = '#facc15';
+      ctx.font = '800 54px "Segoe UI", sans-serif';
+      ctx.fillText('Studio Video Pizza Lingkaran', 90, 260);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 28px "Segoe UI", sans-serif';
+      ctx.fillText('Klik tombol "Putar & Rekam Otomatis" di bawah untuk mulai!', 90, 320);
+    </script>
+  </body>
+</html>
